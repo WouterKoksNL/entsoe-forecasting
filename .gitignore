@@ -6,3 +6,4 @@
 *.png
 *.pdf 
 forecast_entsoe/
+api_key.venv
