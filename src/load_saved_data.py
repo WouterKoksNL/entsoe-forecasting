@@ -1,8 +1,5 @@
 import pandas as pd
-# src/load_saved_data
-def set_datetime_index(ser):
-    ser.index = pd.to_datetime(ser.index, utc=True)
-    return ser
+from utils import convert_index_to_datetime
 
 def detrend(target_series, forecast_series):
     trends = (target_series.groupby(target_series.index.month).transform('mean'))
@@ -18,8 +15,8 @@ def load_load_data(years, zone, folder="data/input_entsoe", detrend_flag=True):
     load_series = load_df['Actual Load']
     load_forecast_series = load_df['Forecasted Load']
     mean_load = load_series.mean()
-    load_series = set_datetime_index(load_series)
-    load_forecast_series = set_datetime_index(load_forecast_series)
+    load_series = convert_index_to_datetime(load_series)
+    load_forecast_series = convert_index_to_datetime(load_forecast_series)
     # if detrend_flag:
     #     load_series, load_forecast_series, trends = detrend(load_series, load_forecast_series)
     
@@ -35,8 +32,8 @@ def load_generation_data(years, zone, folder="data/input_entsoe", carrier='Wind 
         pd.read_csv(f'{folder}/generation_forecasts/{carrier}/{zone}/{year}.csv', index_col=0, parse_dates=True, dtype=float)[carrier] 
         for year in years], axis=0)
     
-    target_series = set_datetime_index(target_series)
-    wind_forecast_series = set_datetime_index(wind_forecast_series)
+    target_series = convert_index_to_datetime(target_series)
+    wind_forecast_series = convert_index_to_datetime(wind_forecast_series)
 
     # drop values that are not in both series
     target_series = target_series[target_series.index.isin(wind_forecast_series.index)]
