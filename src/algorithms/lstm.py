@@ -1,11 +1,12 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Activation
+from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
 
 
-def create_multivariate_supervised(target, forecast, past_forecast_error=None, target_series_hour=None, n_lags=24, n_lead_time=8):
+def create_multivariate_supervised(target, forecast, past_forecast_error=None, target_series_hour=None, target_series_month=None, n_lags=24, n_lead_time=8):
     X, y = [], []
     for i in range(len(target) - n_lags - n_lead_time + 1):
         # current forecasting time index: i + n_lags 
@@ -22,6 +23,10 @@ def create_multivariate_supervised(target, forecast, past_forecast_error=None, t
             target_hour = target_series_hour[i + n_lags + n_lead_time - 1]
             input_data_list.append(np.array([target_hour]))  # ensure 1D
         
+        if target_series_month is not None:
+            target_month = target_series_month[i + n_lags + n_lead_time - 1]
+            input_data_list.append(np.array([target_month]))  # ensure 1D
+
         if past_forecast_error is not None:
             past_forecast_error_values = past_forecast_error[i : i + n_lags]
             input_data_list.append(past_forecast_error_values)
@@ -32,9 +37,9 @@ def create_multivariate_supervised(target, forecast, past_forecast_error=None, t
     
     return np.array(X), np.array(y)
 
-def train_and_test_lstm(target_series, forecast_series, past_forecast_error=None, target_series_hour=None, n_lags=24, n_lead_time=8, train_test_split=0.8, epochs=20):
+def train_and_test_lstm(target_series, forecast_series, past_forecast_error=None, target_series_hour=None, target_series_month=None, n_lags=24, n_lead_time=8, train_test_split=0.8, epochs=20, learning_rate=0.001):
     # Create dataset
-    X, y = create_multivariate_supervised(target_series, forecast_series, past_forecast_error, target_series_hour, n_lags, n_lead_time)
+    X, y = create_multivariate_supervised(target_series, forecast_series, past_forecast_error, target_series_hour, target_series_month, n_lags, n_lead_time)
 
     # Scale features
     scaler_X = StandardScaler()
@@ -52,11 +57,13 @@ def train_and_test_lstm(target_series, forecast_series, past_forecast_error=None
 
     # Build LSTM model
     model = Sequential([
-        LSTM(50, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])),
         Dense(1)
     ])
-    model.compile(optimizer='adam', loss='mse')
+    # Create an Adam optimizer with a reduced learning rate
+    optimizer = Adam(learning_rate=learning_rate)  # Typical default is 0.001; try 0.0001 if still too big
 
+    # Re-compile with the customized optimizer
+    model.compile(optimizer=optimizer, loss='mse')
     # Train
     model.fit(X_train, y_train, epochs=epochs, verbose=1)
 
