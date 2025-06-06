@@ -1,9 +1,9 @@
 *.ini
 *.pyc
 /data/input_entsoe
-/data/api_key.csv
 \plots
 *.png
 *.pdf 
 forecast_entsoe/
 api_key.venv
+data/
