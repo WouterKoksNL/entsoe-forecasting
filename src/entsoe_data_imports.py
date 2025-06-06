@@ -1,14 +1,6 @@
 import pandas as pd
 from entsoe import EntsoePandasClient
-import os
-
-def make_dir(path):
-    """
-    Create a directory if it does not exist.
-    """
-    if not os.path.exists(path):
-        os.makedirs(path)
-
+from utils import make_dir
 
 def get_capacities(
         client: EntsoePandasClient, 
