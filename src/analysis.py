@@ -5,7 +5,7 @@ from sklearn.metrics import r2_score, root_mean_squared_error
 
 from .load_saved_data import (
     load_load_data,
-    load_wind_data,
+    load_generation_data,
 )
 from typing import Callable
 
@@ -19,7 +19,8 @@ def get_fitting_params(
         train_and_test_function: Callable, 
         fitting_function: Callable,
         n_lags=3, 
-        max_lead_time=12
+        max_lead_time=12,
+        data_folder: str = "data/input_entsoe"
         ) -> pd.DataFrame:
     """
     Calculate RMSE w.r.t. lead time for each zone and fit the asymptotic function to the RMSE values.
@@ -41,13 +42,13 @@ def get_fitting_params(
     """
     param_df = pd.DataFrame(index=zones, columns=['a', 'b'])
     for zone in zones:
-        if error_type == "wind":
-            target_series, forecast_series, scaling_value = load_wind_data(years, zone)
-        elif error_type == "load":
-            target_series, forecast_series, scaling_value = load_load_data(years, zone)
+        if error_type == "load":
+            target_series, forecast_series, scaling_value = load_load_data(years, zone, folder=data_folder)
         else:
-            raise NotImplementedError(f"Error type '{error_type}' is not implemented. Choose 'wind' or 'load'.")
-        
+            target_series, forecast_series, scaling_value = load_generation_data(years, zone, folder=data_folder, carrier=error_type)
+
+
+            # raise ValueError(f"Data for zone {zone} contains NaN values. Please check the data.")
         rmse_per_step = []
         for n_lead_time in range(1, max_lead_time + 1):                 
             y_test, y_pred = train_and_test_function(target_series, forecast_series, target_series - forecast_series, target_series.index.hour ,n_lags=n_lags, n_lead_time=n_lead_time)

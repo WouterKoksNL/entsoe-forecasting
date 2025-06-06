@@ -1,10 +1,18 @@
 import pandas as pd
 from entsoe import EntsoePandasClient
+import os
+
+def make_dir(path):
+    """
+    Create a directory if it does not exist.
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def get_capacities(
         client: EntsoePandasClient, 
-        zones, 
+        zones: list[str], 
         years, 
         carrier='Wind Onshore'):
     caps_df = pd.DataFrame(index=zones, columns=years, dtype=float)
@@ -20,27 +28,39 @@ def get_capacities(
                 print(f"Error fetching data for {zone} in {year}. Setting capacity to 0.")
                 caps_df.loc[zone, year] = 0
 
-    caps_df.to_csv(f'data/entsoe_capacities_{carrier}.csv')
+    carrier_save_name = carrier.replace(' ', '_')
+    zones_save_name = "_".join(zones)
+    make_dir(f'data/input_entsoe/mean_capacities/{carrier_save_name}')
+    make_dir(f'data/input_entsoe/capacities/{carrier_save_name}')
+    caps_df.to_csv(f'data/input_entsoe/capacities/{carrier_save_name}/{zones_save_name}.csv')
     mean_cap = caps_df.mean(axis=1)
-    mean_cap.to_csv(f'data/entsoe_capacities_{carrier}_mean.csv')
+    mean_cap.to_csv(f'data/input_entsoe/mean_capacities/{carrier_save_name}/{zones_save_name}.csv')
     return 
 
+def get_start_end_dates(
+        year: int,
+):
+    start= pd.Timestamp(f'{year}0101', tz='Europe/Brussels')
+    end = pd.Timestamp(f'{year+1}0101', tz='Europe/Brussels')
+    return start, end
 
 def get_generation(
         client: EntsoePandasClient, 
         zones, 
-        years
+        years,
         ):
-    for year in years:
-        start = pd.Timestamp(f'{year}0101', tz='Europe/Brussels')
-        end = pd.Timestamp(f'{year+1}0101', tz='Europe/Brussels')
 
-        for country_code in zones:
+    for year in years:
+        start, end = get_start_end_dates(year)
+        for zone in zones:
+            zone_dir = f"data/input_entsoe/generation/{zone}"
+            make_dir(zone_dir)
             try:
-                df = client.query_generation(country_code, start=start, end=end, psr_type=None, include_eic=False)
-                df.to_csv(f'data/entsoe_wind_{year}' + country_code + '.csv')
+                df = client.query_generation(zone, start=start, end=end, psr_type=None, include_eic=False)
+                df = df.drop(df.index[df.index.isna()])
+                df.to_csv(f'data/input_entsoe/generation/{zone}/{year}.csv')
             except:
-                print('Error downloading data for ' + country_code)
+                print('Error downloading data for ' + zone)
     return 
 
 def get_load_and_forecast(
@@ -50,25 +70,42 @@ def get_load_and_forecast(
         ):
     
     for year in years:
-        start = pd.Timestamp(f'{year}0101', tz='Europe/Brussels')
-        end = pd.Timestamp(f'{year+1}0101', tz='Europe/Brussels')
+        start, end = get_start_end_dates(year)
         for zone in zones:
+            zone_dir = f"data/input_entsoe/load_and_forecasts/{zone}"
+            make_dir(zone_dir)
             try:
                 load_df = client.query_load_and_forecast(zone, start=start, end=end)
-                load_df.to_csv(f'data/entsoe_load_{year}{zone}.csv')
+                load_df.to_csv(f'{zone_dir}/{year}.csv')
             except:
                 print('Error downloading load data for ' + zone)
     return 
 
-def get_wind_solar_forecast(client, zones, years, carrier='Wind Onshore'):
+def get_wind_solar_forecast(client, zones, years, carriers=['Wind Onshore']):
     for year in years:
-        start = pd.Timestamp(f'{year}0101', tz='Europe/Brussels')
-        end = pd.Timestamp(f'{year+1}0101', tz='Europe/Brussels')
+        start, end = get_start_end_dates(year)
         for zone in zones:
             try:
                 forecast_df = client.query_wind_and_solar_forecast(zone, start=start, end=end, psr_type=None)
+                for carrier in carriers:
+                    zone_dir = f"data/input_entsoe/generation_forecasts/{carrier}/{zone}"
+                    make_dir(zone_dir)
+                    forecast_series = forecast_df[carrier]
+                    forecast_series.to_csv(f'data/input_entsoe/generation_forecasts/{carrier}/{zone}/{year}.csv')
+            except:
+                print('Error downloading forecast data for ' + zone)
+    return
+
+def get_wind_solar_intraday_forecast(client, zones, years, carrier='Wind Onshore'):
+    for year in years:
+        start, end = get_start_end_dates(year)
+        for zone in zones:
+            zone_dir = f"data/input_entsoe/intraday_generation_forecasts/{carrier}/{zone}"
+            make_dir(zone_dir)
+            try:
+                forecast_df = client.query_intraday_forecast(zone, start=start, end=end, psr_type=None)
                 forecast_series = forecast_df[carrier]
-                forecast_series.to_csv(f'data/entsoe_wind_{year}{zone}_forecast.csv')
+                forecast_series.to_csv(f'data/input_entsoe/generation_forecasts/{carrier}/{zone}/{year}.csv')
             except:
                 print('Error downloading forecast data for ' + zone)
     return
