@@ -57,7 +57,8 @@ def train_and_test_lstm(target_series, forecast_series, past_forecast_error=None
 
     # Build LSTM model
     model = Sequential([
-        Dense(1)
+        LSTM(50, activation='relu'),
+        Dense(1, activation=None),  # Clamp final output to be non-negative
     ])
     # Create an Adam optimizer with a reduced learning rate
     optimizer = Adam(learning_rate=learning_rate)  # Typical default is 0.001; try 0.0001 if still too big
