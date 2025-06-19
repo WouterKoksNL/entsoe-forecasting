@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import convert_index_to_datetime
+from .utils import convert_index_to_datetime
 
 def detrend(target_series, forecast_series):
     trends = (target_series.groupby(target_series.index.month).transform('mean'))
@@ -8,22 +8,18 @@ def detrend(target_series, forecast_series):
     return detrended_target, detrended_forecast, trends
 
 
-def load_load_data(years, zone, folder="data/input_entsoe", detrend_flag=True):
-
+def load_load_data(years, zone, folder="data/input_entsoe"):
     load_df = pd.concat([pd.read_csv(f'{folder}/load_and_forecasts/{zone}/{year}.csv', index_col=0, parse_dates=True) for year in years], axis=0)
-
     load_series = load_df['Actual Load']
     load_forecast_series = load_df['Forecasted Load']
     mean_load = load_series.mean()
     load_series = convert_index_to_datetime(load_series)
     load_forecast_series = convert_index_to_datetime(load_forecast_series)
-    # if detrend_flag:
-    #     load_series, load_forecast_series, trends = detrend(load_series, load_forecast_series)
-    
     load_forecast_series.ffill(inplace=True)
     return load_series, load_forecast_series, mean_load
 
-def load_generation_data(years, zone, folder="data/input_entsoe", carrier='Wind Onshore', detrend_flag=True):
+
+def load_generation_data(years, zone, folder="data/input_entsoe", carrier='Wind Onshore'):
     target_series = pd.concat([
         pd.read_csv(f'{folder}/generation/{zone}/{year}.csv', index_col=0, parse_dates=True, dtype=float)[carrier] 
         for year in years], axis=0)
