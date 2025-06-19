@@ -35,7 +35,7 @@ def load_generation_data(years, zone, folder="data/input_entsoe", carrier='Wind 
     target_series = target_series[target_series.index.isin(wind_forecast_series.index)]
     wind_forecast_series = wind_forecast_series[wind_forecast_series.index.isin(target_series.index)]
 
-    capacity = pd.read_csv(f'{folder}/mean_capacities/{carrier.replace(' ', '_')}/{zone}.csv', index_col=0).loc[zone].values[0]
+    capacity = pd.read_csv(f'{folder}/mean_capacities/{carrier.replace(" ", "_")}/{zone}.csv', index_col=0).loc[zone].values[0]
     
     # fill missing values with mean daily trend
     trends = (target_series.groupby(target_series.index.month).transform('mean')) + (target_series.groupby(target_series.index.hour).transform('mean'))
