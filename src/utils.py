@@ -12,3 +12,6 @@ def make_dir(path):
 def convert_index_to_datetime(ser):
     ser.index = pd.to_datetime(ser.index, utc=True)
     return ser
+
+def get_hourly(series):
+    return series.loc[series.index.minute == 0]
