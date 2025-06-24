@@ -7,3 +7,5 @@
 forecast_entsoe/
 api_key.venv
 data/
+*.pkl
+*.zip
