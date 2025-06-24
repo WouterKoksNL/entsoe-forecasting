@@ -61,16 +61,18 @@ def get_forecasts(
         raise ValueError(f"Target series for {zone} in {error_type} has too many NaN values. Please check the data.")
     target_series.ffill(inplace=True)
     forecast_series.ffill(inplace=True)
-    target_series_mean = target_series.mean()
-    target_series_std = target_series.std()
-    forecast_series_mean = forecast_series.mean()
-    forecast_series_std = forecast_series.std()
-    difference = target_series - forecast_series
+    scaled_target = target_series / scaling_value
+    scaled_forecast = forecast_series / scaling_value
+    scaled_target_mean = scaled_target.mean()
+    scaled_target_std = scaled_target.std()
+    scaled_forecast_mean = scaled_forecast.mean()
+    scaled_forecast_std = scaled_forecast.std()
+    difference = scaled_target - scaled_forecast
     difference_mean = difference.mean()
     difference_std = difference.std()
     # Normalize the series
-    target_series = (target_series - target_series_mean) / target_series_std
-    forecast_series = (forecast_series - forecast_series_mean) / forecast_series_std
+    normalized_target = (scaled_target - scaled_target_mean) / scaled_target_std
+    normalized_forecast = (scaled_forecast - scaled_forecast_mean) / scaled_forecast_std
     difference = (difference - difference_mean) / difference_std
 
     target_series_hour_sin = np.sin(target_series.index.hour * (2 * np.pi / 24))
@@ -88,9 +90,10 @@ def get_forecasts(
             n_lead_time=n_lead_time,
             train_test_split=train_test_split,
             )
-        y_test_dict[n_lead_time] = y_test * target_series_std + target_series_mean
-        y_pred_dict[n_lead_time] = y_pred * target_series_std + target_series_mean
-    
+        y_test_dict[n_lead_time] = (y_test * scaled_target_std + scaled_target_mean) * scaling_value
+        y_pred_dict[n_lead_time] = (y_pred * scaled_target_std + scaled_target_mean) * scaling_value
+
+
     make_dir(f"{forecast_pickle_dir}/{zone}/{error_type}")
     if pickle_output_flag:
         save_data(forecast_pickle_dir, zone, error_type, y_test_dict, y_pred_dict, scaling_value, target_series, forecast_series)   
