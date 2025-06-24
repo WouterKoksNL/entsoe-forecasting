@@ -21,12 +21,12 @@ def get_capacities(
                 caps_df.loc[zone, year] = 0
 
     carrier_save_name = carrier.replace(' ', '_')
-    zones_save_name = "_".join(zones)
     make_dir(f'data/input_entsoe/mean_capacities/{carrier_save_name}')
     make_dir(f'data/input_entsoe/capacities/{carrier_save_name}')
-    caps_df.to_csv(f'data/input_entsoe/capacities/{carrier_save_name}/{zones_save_name}.csv')
-    mean_cap = caps_df.mean(axis=1)
-    mean_cap.to_csv(f'data/input_entsoe/mean_capacities/{carrier_save_name}/{zones_save_name}.csv')
+    for zone in zones:
+        caps_df.to_csv(f'data/input_entsoe/capacities/{carrier_save_name}/{zone}.csv')
+        mean_cap = caps_df.mean(axis=1)
+        mean_cap.to_csv(f'data/input_entsoe/mean_capacities/{carrier_save_name}/{zone}.csv')
     return 
 
 def get_start_end_dates(
