@@ -77,15 +77,19 @@ def get_forecasts(
 
     target_series_hour_sin = np.sin(target_series.index.hour * (2 * np.pi / 24))
     target_series_series_dayofyear_sin = np.sin(target_series.index.dayofyear * (2 * np.pi / 365))
+    target_series_hour_cos = np.cos(target_series.index.hour * (2 * np.pi / 24))
+    target_series_series_dayofyear_cos = np.cos(target_series.index.dayofyear * (2 * np.pi / 365))
     for n_lead_time in lead_time_range:     
         reduced_forecast_error_usability_entry = np.maximum(0, n_lags - target_series.index.hour)
         y_test, y_pred = train_and_test_function(
-            target_series.values, 
-            forecast_series.values, 
-            difference.values, 
-            reduced_forecast_error_usability_entry, 
-            target_series_hour_sin, 
-            target_series_series_dayofyear_sin, 
+            target_series=normalized_target.values, 
+            forecast_series=normalized_forecast.values, 
+            past_forecast_error=difference.values, 
+            reduced_forecast_error_usability_entry=reduced_forecast_error_usability_entry, 
+            target_series_hour_sin=target_series_hour_sin, 
+            target_series_yearly_sin=target_series_series_dayofyear_sin, 
+            target_series_hour_cos=target_series_hour_cos, 
+            target_series_yearly_cos=target_series_series_dayofyear_cos, 
             n_lags=n_lags, 
             n_lead_time=n_lead_time,
             train_test_split=train_test_split,
