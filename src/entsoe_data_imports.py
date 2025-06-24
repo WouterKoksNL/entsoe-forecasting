@@ -49,7 +49,14 @@ def get_generation(
             make_dir(zone_dir)
             try:
                 df = client.query_generation(zone, start=start, end=end, psr_type=None, include_eic=False)
-                df = df.drop(df.index[df.index.isna()])
+                if isinstance(df.columns, pd.MultiIndex):
+                    # extract the columns in which the second level is 'Actual Aggregated'
+                    if 'Actual Aggregated' in df.columns.get_level_values(1):
+                        df = df.loc[:, df.columns.get_level_values(1) == 'Actual Aggregated']
+                        df.columns = df.columns.droplevel(1)
+                    else:
+                            print(f"Warning: 'Actual Aggregated' not found in columns for {zone} in {year}, \
+                            while df.columns is a MultiIndex. Check the data structure.")
                 df.to_csv(f'data/input_entsoe/generation/{zone}/{year}.csv')
             except:
                 print('Error downloading data for ' + zone)
