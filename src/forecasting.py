@@ -14,7 +14,13 @@ from .algorithms.get_algorithm import get_algorithm
 from .forecast_data_handling import save_data
 
 
-
+def get_correct_time_indices(y_pred_dict, target_index, max_lead_time):
+        pred_dict = {}
+        for n_lead_time in range(1, max_lead_time + 1):
+                start_index = target_index.size - y_pred_dict[n_lead_time].size
+                y_pred_ser = pd.Series(y_pred_dict[n_lead_time], index=target_index[start_index:])
+                pred_dict[n_lead_time] = y_pred_ser
+        return pred_dict
 
 def get_forecasts(
         error_type: str, 

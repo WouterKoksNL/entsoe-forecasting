@@ -25,3 +25,5 @@ def get_data(forecast_pickle_dir, zone, error_type):
     target_series = pd.read_csv(f"{forecast_pickle_dir}/{zone}/{error_type}/target_series.csv", index_col=0, parse_dates=True)
     forecast_series = pd.read_csv(f"{forecast_pickle_dir}/{zone}/{error_type}/forecast_series.csv", index_col=0, parse_dates=True)
     return y_test_dict, y_pred_dict, scaling_value, target_series, forecast_series
+
+

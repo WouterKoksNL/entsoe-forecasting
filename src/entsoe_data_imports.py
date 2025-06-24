@@ -1,6 +1,6 @@
 import pandas as pd
 from entsoe import EntsoePandasClient
-from utils import make_dir
+from .utils import make_dir
 
 def get_capacities(
         client: EntsoePandasClient, 
