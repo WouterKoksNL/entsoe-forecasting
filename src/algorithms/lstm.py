@@ -6,7 +6,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
 
 
-def create_multivariate_supervised(target, forecast, past_forecast_error=None, reduced_forecast_error_usability_entry=None, target_series_hour=None, target_series_month=None, n_lags=24, n_lead_time=8):
+def create_multivariate_supervised(target, forecast, past_forecast_error=None, reduced_forecast_error_usability_entry=None, target_series_hour_sin=None, target_series_month_sin=None, target_series_hour_cos=None, target_series_month_cos=None, n_lags=24, n_lead_time=8):
     X, y = [], []
     for i in range(len(target) - n_lags - n_lead_time + 1):
         # current forecasting time index: i + n_lags 
@@ -19,13 +19,21 @@ def create_multivariate_supervised(target, forecast, past_forecast_error=None, r
 
         input_data_list = [past_values, np.array([future_forecast])]  # ensure 1D
 
-        if target_series_hour is not None:
-            target_hour = target_series_hour[i + n_lags + n_lead_time - 1]
-            input_data_list.append(np.array([target_hour]))  # ensure 1D
+        if target_series_hour_sin is not None:
+            target_hour_sin = target_series_hour_sin[i + n_lags + n_lead_time - 1]
+            input_data_list.append(np.array([target_hour_sin]))  # ensure 1D
         
-        if target_series_month is not None:
-            target_month = target_series_month[i + n_lags + n_lead_time - 1]
-            input_data_list.append(np.array([target_month]))  # ensure 1D
+        if target_series_month_sin is not None:
+            target_month_sin = target_series_month_sin[i + n_lags + n_lead_time - 1]
+            input_data_list.append(np.array([target_month_sin]))  # ensure 1D
+
+        if target_series_hour_cos is not None:
+            target_hour_cos = target_series_hour_cos[i + n_lags + n_lead_time - 1]
+            input_data_list.append(np.array([target_hour_cos]))  # ensure 1D
+        
+        if target_series_month_cos is not None:
+            target_month_cos = target_series_month_cos[i + n_lags + n_lead_time - 1]
+            input_data_list.append(np.array([target_month_cos]))  # ensure 1D
 
         if past_forecast_error is not None:
             past_forecast_error_values = past_forecast_error[i : i + n_lags]
@@ -47,6 +55,8 @@ def train_and_test_lstm(
         reduced_forecast_error_usability_entry=None, 
         target_series_hour_sin=None, 
         target_series_yearly_sin=None, 
+        target_series_hour_cos=None, 
+        target_series_yearly_cos=None, 
         n_lags=8, 
         n_lead_time=8, 
         train_test_split=0.8, 
@@ -58,7 +68,7 @@ def train_and_test_lstm(
         ):
     # Create dataset
     print("Training LSTM model for n_lead_time =", n_lead_time)
-    X, y = create_multivariate_supervised(target_series, forecast_series, past_forecast_error, reduced_forecast_error_usability_entry, target_series_hour_sin, target_series_yearly_sin, n_lags, n_lead_time)
+    X, y = create_multivariate_supervised(target_series, forecast_series, past_forecast_error, reduced_forecast_error_usability_entry, target_series_hour_sin, target_series_yearly_sin, target_series_hour_cos, target_series_yearly_cos, n_lags, n_lead_time)
 
     # Scale features
     scaler_X = StandardScaler()
