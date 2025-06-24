@@ -9,3 +9,4 @@ api_key.venv
 data/
 *.pkl
 *.zip
+*.csv
