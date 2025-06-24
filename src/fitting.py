@@ -26,7 +26,7 @@ def get_fitting_function(fitting_function_name: str) -> Callable:
         raise NotImplementedError(f"Fitting function '{fitting_function_name}' is not implemented.")
     
 
-def calc_rmse(
+def calc_nrmse(
         lead_time_range: range | list[int],
         y_test_dict: dict[int, np.ndarray], 
         y_pred_dict: dict[int, np.ndarray],
@@ -89,7 +89,7 @@ def calc_fitting_params_loop(
                 forecast_pickle_dir, zone, error_type)
             
 
-            rmse_ser = calc_rmse(lead_time_range, y_test_dict, y_pred_dict, scaling_value)
+            rmse_ser = calc_nrmse(lead_time_range, y_test_dict, y_pred_dict, scaling_value)
             a, b, r_squared = calc_fitting_params(lead_time_range, rmse_ser, fitting_function)
             rmse_dict[error_type][zone] = rmse_ser
             param_df.loc[zone, 'a'] = a
@@ -97,11 +97,24 @@ def calc_fitting_params_loop(
             param_df.loc[zone, 'r_squared'] = r_squared
             param_df.to_csv(f"{output_param_dir}/rmse_params.csv", index=True)
         params_dict[error_type] = param_df
+        make_dir(f"{output_param_dir}/{error_type}")
+        param_df.to_csv(f"{output_param_dir}/{error_type}/fitting_params.csv", index=True)
         
     # pickle rmse values
     with open(f"{output_param_dir}/rmse_dict.pkl", "wb") as f:
         pickle.dump(rmse_dict, f)
 
+
+    # restructured_params = {}
+    # for error_type, params_df in params_dict.items():
+    #     # if no keys in restructured_params, initialize it
+    #     if not restructured_params:
+    #         restructured_params = {zone: {} for zone in params_df.index}
+    #     restructured_params[zone][error_type] = params_df.loc[zone]
+    # for zone, params in restructured_params.items():
+    #     make_dir(f"{output_param_dir}/{zone}")
+    #     restructured_params[zone] = pd.DataFrame(params).T
+    #     restructured_params[zone].to_csv(f"{output_param_dir}/{zone}/fitting_params.csv", index=True)
     return params_dict, rmse_dict
 
 
